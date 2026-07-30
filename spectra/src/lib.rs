@@ -44,7 +44,7 @@
 //!
 //! You always emit the same way (`CacheHitsRecorder::record(...)`, etc.). What changes is
 //! **which process writes the database**. Storage is **embedded** (mem/sqlite) or **remote**
-//! (ClickHouse/TensorBase) — configured on [`Spectra::builder()`], not a global mode enum.
+//! (ClickHouse/TensorBase) — configured on [`Spectra::builder()`].
 //!
 //! ## Choose how data reaches storage
 //!
@@ -473,7 +473,7 @@
 //! - Product schemas belong in **your application**; this crate registers CI demo
 //!   `platform_smoke_*` schemas only.
 //! - Pin consumption via git tag (for example `v0.1.0`). Configure storage on
-//!   [`Spectra::builder()`], not a global mode enum.
+//!   [`Spectra::builder()`].
 //! - Event chart aggregates (`spectra_core::EventStorageBackend::query_aggregate`) are stubbed on most backends.
 //! - Schema modules must be `mod`-linked into the binary or `inventory` will not see them.
 //! - Schema macros and helpers call through the `spectra` crate — pin `spectra` as a direct

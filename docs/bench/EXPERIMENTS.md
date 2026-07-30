@@ -144,7 +144,7 @@ export SPECTRA_BENCH_BATCH_SWEEP=512,2048
 ./teardown.sh
 ```
 
-**Flush / timing:** BM-SW7 uses `flush_persist` then visibility. BM-SW5/SW6 use awaited adapter writes. Full-stack enqueue (SW1) is not a durable metric on remote.
+**Flush / timing:** BM-SW7 uses `flush_persist` then visibility. BM-SW5/SW6 use awaited adapter writes. Full-stack enqueue (SW1) measures end-to-end enqueue latency on remote; durability coverage is BM-SW7.
 
 ---
 

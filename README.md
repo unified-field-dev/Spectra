@@ -7,7 +7,7 @@
 
 [GitHub](https://github.com/unified-field-dev/spectra) · [crates.io](https://crates.io/crates/uf-spectra) · `cargo doc -p uf-spectra --features mem --open` · [Benchmarks](docs/bench/PERFORMANCE_STUDY.md)
 
-**Spectra** is a Rust observability library built around **declarative schemas** and **ergonomic typed logging APIs** — counters, gauges, and structured event logs with the same emit surface whether you run **embedded** in one process or across a **large multi-service cluster**. Wire storage at build time via **`Spectra::builder()`** — composable adapters behind thin async ports, in the spirit of [Continuum](https://github.com/unified-field-dev/continuum) and [Photon](https://github.com/unified-field-dev/photon).
+**Spectra** is a Rust observability library for declarative schemas and typed logging APIs — counters, gauges, and structured event logs with the same emit surface from embedded single-process use through multi-service clusters. Wire storage at build time via `Spectra::builder()` — composable adapters behind thin async ports, in the spirit of [Continuum](https://github.com/unified-field-dev/continuum) and [Photon](https://github.com/unified-field-dev/photon).
 
 *Declarative schemas and typed logging APIs — same surface from embedded to multi-service.*
 
@@ -65,7 +65,7 @@ Your application owns identity, routing, and business logic. Spectra owns observ
 
 **Security / hardening:** query identifier validation, event paging clamps, emit-gate force-off, remote TLS (`SPECTRA_ALLOW_INSECURE_REMOTE` for plaintext lab URLs), URL credential redaction, and PII mask helpers — see [`SECURITY.md`](SECURITY.md) and `cargo doc -p uf-spectra --open` → Features.
 
-**Topology vocabulary:** **embedded** (in-process store) vs **remote** (network-backed store). Assembly uses builder methods — not a global deployment mode enum.
+**Topology vocabulary:** **embedded** (in-process store) vs **remote** (network-backed store). Choose topology with builder methods.
 
 ## Quick start
 
