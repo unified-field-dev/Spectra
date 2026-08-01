@@ -131,7 +131,23 @@ impl RemoteClient {
                 })
             }
             (RemoteUrlKind::Http, http_url) => {
-                let client = HttpClient::default().with_url(http_url);
+                // `clickhouse::Client::with_url` does not apply URL userinfo; set
+                // credentials explicitly when present (MVE: http://user:pass@host:8123).
+                let mut client = HttpClient::default();
+                if let Ok(parsed) = url::Url::parse(http_url) {
+                    let mut base = parsed.clone();
+                    let _ = base.set_username("");
+                    let _ = base.set_password(None);
+                    client = client.with_url(base.as_str());
+                    if !parsed.username().is_empty() {
+                        client = client.with_user(parsed.username());
+                    }
+                    if let Some(password) = parsed.password() {
+                        client = client.with_password(password);
+                    }
+                } else {
+                    client = client.with_url(http_url);
+                }
                 Ok(Self {
                     inner: ClientInner::Http(client),
                 })

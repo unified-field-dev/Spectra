@@ -1162,7 +1162,7 @@ dependencies = [
 
 [[package]]
 name = "spectra-backend-clickhouse"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "async-trait",
  "chrono",
@@ -1175,7 +1175,7 @@ dependencies = [
 
 [[package]]
 name = "spectra-backend-mem"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "async-trait",
  "chrono",
@@ -1188,7 +1188,7 @@ dependencies = [
 
 [[package]]
 name = "spectra-backend-remote-common"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "async-trait",
  "chrono",
@@ -1199,11 +1199,12 @@ dependencies = [
  "tokio",
  "tracing",
  "uf-spectra-core",
+ "url",
 ]
 
 [[package]]
 name = "spectra-backend-sqlite"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "async-trait",
  "chrono",
@@ -1219,7 +1220,7 @@ dependencies = [
 
 [[package]]
 name = "spectra-backend-tensorbase"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "async-trait",
  "chrono",
@@ -1232,7 +1233,7 @@ dependencies = [
 
 [[package]]
 name = "spectra-bench"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "chrono",
@@ -1247,7 +1248,7 @@ dependencies = [
 
 [[package]]
 name = "spectra-e2e"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "serde_json",
  "spectra-testkit",
@@ -1257,7 +1258,7 @@ dependencies = [
 
 [[package]]
 name = "spectra-macros"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1266,7 +1267,7 @@ dependencies = [
 
 [[package]]
 name = "spectra-runtime"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "chrono",
  "serde_json",
@@ -1278,7 +1279,7 @@ dependencies = [
 
 [[package]]
 name = "spectra-testkit"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "chrono",
@@ -1638,7 +1639,7 @@ dependencies = [
 
 [[package]]
 name = "uf-spectra"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "async-trait",
  "chrono",
@@ -1659,7 +1660,7 @@ dependencies = [
 
 [[package]]
 name = "uf-spectra-core"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "async-trait",
  "chrono",
