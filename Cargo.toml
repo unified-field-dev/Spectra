@@ -10,6 +10,7 @@ members = [
     "spectra-backend-clickhouse",
     "spectra-runtime",
     "spectra",
+    "spectra-codegen",
     "spectra-testkit",
     "spectra-e2e",
     "spectra-bench",

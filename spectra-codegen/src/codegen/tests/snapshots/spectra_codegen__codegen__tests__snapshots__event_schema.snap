@@ -1,0 +1,5 @@
+---
+source: spectra-codegen/src/codegen/tests/snapshots.rs
+expression: out
+---
+pub mod helpers { # [derive (Debug , Clone , serde :: Serialize , serde :: Deserialize)] pub struct RequestDebugLog { pub message : String } pub struct RequestDebugLogLogger ; impl RequestDebugLogLogger { # [doc = r" Emit with an explicit timestamp (preserved through buffered drain)."] pub fn log_at (message : String , _ts : chrono :: DateTime < chrono :: Utc > ,) { let mut map = serde_json :: Map :: new () ; map . insert ("message" . to_string () , serde_json :: json ! (message)) ; let fields = serde_json :: Value :: Object (map) ; :: spectra_core :: try_log_event_now ("request_debug_log" , & fields) ; } pub fn log (message : String) { Self :: log_at (message , chrono :: Utc :: now ()) ; } } }

@@ -1,0 +1,17 @@
+[package]
+name = "spectra-codegen"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Build-time codegen from Spectra schema DSL files"
+publish = false
+
+[dependencies]
+anyhow = "1"
+quote = "1"
+proc-macro2 = "1"
+spectra-core = { workspace = true }
+
+[dev-dependencies]
+insta = "1"
+tempfile = "3"

@@ -1,0 +1,5 @@
+---
+source: spectra-codegen/src/codegen/tests/snapshots.rs
+expression: out
+---
+pub mod helpers { pub struct CacheHitsRecorder ; impl CacheHitsRecorder { # [doc = r" Record with an explicit emit-time timestamp."] pub fn record_at (delta : i64 , labels : serde_json :: Value , _ts : chrono :: DateTime < chrono :: Utc > ,) { let label_pairs : Vec < (& str , & str) > = labels . as_object () . map (| obj | { obj . iter () . map (| (k , v) | (k . as_str () , v . as_str () . unwrap_or (""))) . collect () }) . unwrap_or_default () ; :: spectra_core :: try_record_counter_now ("cache_hits" , & label_pairs , delta) ; } pub fn record (delta : i64 , labels : serde_json :: Value) { Self :: record_at (delta , labels , chrono :: Utc :: now ()) ; } } }
