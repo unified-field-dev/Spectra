@@ -102,5 +102,5 @@ pub fn list_experiments() {
         };
         println!("{}  [{track}]  {}", meta.id, meta.summary);
     }
-    println!("Full catalog: docs/bench/EXPERIMENTS.md");
+    println!("Full catalog: docs/bench/PERFORMANCE.md (highlights); lab EXPERIMENTS for registry");
 }
