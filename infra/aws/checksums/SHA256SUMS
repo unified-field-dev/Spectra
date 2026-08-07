@@ -1,6 +1,0 @@
-# Pinned SHA-256 digests for AWS bootstrap downloads (TensorBase v2021.07.05).
-# Regenerate after bumping TENSORBASE_VERSION or rotating the rustup installer:
-#   sha256sum base_linux.zip clickhouse_client_repack_linux.zip rustup-init.sh
-44de56edd69f25e0219bebf22ffdd1e91a815611b79948436af943b4784c3945  base_linux.zip
-e15e9568a8827364db40139cf8c2cc184223d89beba85545fe5387f85bb648aa  clickhouse_client_repack_linux.zip
-6c30b75a75b28a96fd913a037c8581b580080b6ee9b8169a3c0feb1af7fe8caf  rustup-init.sh

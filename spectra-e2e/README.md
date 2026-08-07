@@ -65,7 +65,7 @@ Remote rows use `Topology::RemoteIngest` (`remote_ingest` submodule) and require
 Co-located ClickHouse + TensorBase on a single EC2 instance. Full remote catalog and capacity campaigns:
 
 ```bash
-cd infra/aws/spectra
+cd "$UF_LAB_ROOT/spectra/infra/aws/spectra"
 export AWS_KEY_NAME=your-key
 export SSH_KEY_PATH=~/.ssh/your-key.pem
 
@@ -77,7 +77,7 @@ export SSH_KEY_PATH=~/.ssh/your-key.pem
 ./teardown.sh
 ```
 
-See [`infra/aws/spectra/README.md`](../infra/aws/spectra/README.md).
+See `$UF_LAB_ROOT/spectra/infra/aws/spectra/README.md`.
 
 Runnable emit examples (same smoke as `platform-smoke-roundtrip`):
 

@@ -85,7 +85,7 @@ export SSH_KEY_PATH=~/.ssh/your-key.pem
 ./teardown.sh
 ```
 
-Then fill scoreboards in [`docs/bench/PERFORMANCE_STUDY.md`](bench/PERFORMANCE_STUDY.md) from the fetched JSON.
+Then fill scoreboards in [`docs/bench/PERFORMANCE.md`](bench/PERFORMANCE_STUDY.md) from the fetched JSON.
 
 On-host only (after bootstrap):
 
@@ -112,7 +112,7 @@ export SPECTRA_BENCH_BATCH_SWEEP=512,2048
 ./teardown.sh
 ```
 
-Details: [`infra/aws/spectra-multidw/README.md`](../infra/aws/spectra-multidw/README.md). Scoreboard: [`docs/bench/PERFORMANCE_STUDY.md`](bench/PERFORMANCE_STUDY.md).
+Details: [`infra/aws/spectra-multidw/README.md`](../infra/aws/spectra-multidw/README.md). Scoreboard: [`docs/bench/PERFORMANCE.md`](bench/PERFORMANCE_STUDY.md).
 
 ## Baseline results
 

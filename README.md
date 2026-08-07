@@ -5,7 +5,7 @@
 [![docs.rs](https://docs.rs/uf-spectra/badge.svg)](https://docs.rs/uf-spectra)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-[GitHub](https://github.com/unified-field-dev/spectra) · [crates.io](https://crates.io/crates/uf-spectra) · `cargo doc -p uf-spectra --features mem --open` · [Benchmarks](docs/bench/PERFORMANCE_STUDY.md)
+[GitHub](https://github.com/unified-field-dev/spectra) · [crates.io](https://crates.io/crates/uf-spectra) · `cargo doc -p uf-spectra --features mem --open` · [Benchmarks](docs/bench/PERFORMANCE.md)
 
 **Spectra** is a Rust observability library for declarative schemas and typed logging APIs — counters, gauges, and structured event logs with the same emit surface from embedded single-process use through multi-service clusters. Wire storage at build time via `Spectra::builder()` — composable adapters behind thin async ports, in the spirit of [Continuum](https://github.com/unified-field-dev/continuum) and [Photon](https://github.com/unified-field-dev/photon).
 
@@ -180,8 +180,8 @@ API details: [`spectra/README.md`](spectra/README.md) and `cargo doc -p uf-spect
 | [`spectra/README.md`](spectra/README.md) | Feature flags, configuration, [How to run examples](spectra/README.md#how-to-run-examples) |
 | [`spectra/examples/README.md`](spectra/examples/README.md) | Example ladder (when-to-use, commands, success signals) |
 | [`spectra/examples/`](spectra/examples/) | Runnable `.rs` sources |
-| [`docs/bench/EXPERIMENTS.md`](docs/bench/EXPERIMENTS.md) | Benchmark registry and CLI |
-| [`docs/bench/PERFORMANCE_STUDY.md`](docs/bench/PERFORMANCE_STUDY.md) | Performance study |
+| [`docs/bench/PERFORMANCE.md`](docs/bench/PERFORMANCE.md) | Benchmark registry and CLI |
+| [`docs/bench/PERFORMANCE.md`](docs/bench/PERFORMANCE.md) | Performance study |
 | Per-crate READMEs | Crate-specific entry points |
 
 ### Maintainers
