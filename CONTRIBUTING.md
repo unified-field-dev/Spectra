@@ -51,7 +51,7 @@ SPECTRA_ALLOW_INSECURE_REMOTE=1 SPECTRA_TENSORBASE_URL=tcp://127.0.0.1:9528 \
   cargo run -p uf-spectra --example quickstart_tensorbase_emit --features tensorbase
 ```
 
-Full remote gate (EC2): [`infra/aws/spectra/README.md`](infra/aws/spectra/README.md).
+Full remote gate runs on AWS EC2 (operator campaign).
 
 ## Lint policy
 

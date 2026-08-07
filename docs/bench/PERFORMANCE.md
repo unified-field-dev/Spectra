@@ -1,6 +1,6 @@
 # Spectra performance
 
-Measured on AWS (`t3.xlarge` class and multi-DW layouts). Spectra is the analytics/ingest path from event buses into columnar stores (ClickHouse and related engines). Full scoreboards live in the private `uf-live-cloud-lab` spectra performance study.
+Measured on AWS (`t3.xlarge` class and multi-DW layouts). Spectra is the analytics/ingest path from event buses into columnar stores (ClickHouse and related engines). Full scoreboards come from AWS campaign runs.
 
 ## Ingest and query
 

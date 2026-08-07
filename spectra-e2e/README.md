@@ -62,22 +62,7 @@ Remote rows use `Topology::RemoteIngest` (`remote_ingest` submodule) and require
 
 ## AWS full E2E + bench
 
-Co-located ClickHouse + TensorBase on a single EC2 instance. Full remote catalog and capacity campaigns:
-
-```bash
-cd "$UF_LAB_ROOT/spectra/infra/aws/spectra"
-export AWS_KEY_NAME=your-key
-export SSH_KEY_PATH=~/.ssh/your-key.pem
-
-./provision.sh
-./bootstrap.sh
-./deploy-and-run-e2e.sh
-./deploy-and-run-bench.sh
-./fetch-reports.sh
-./teardown.sh
-```
-
-See `$UF_LAB_ROOT/spectra/infra/aws/spectra/README.md`.
+Co-located ClickHouse + TensorBase on a single EC2 instance. Full remote catalog and capacity campaigns run on AWS: provision, bootstrap, deploy-and-run e2e/bench, fetch reports, tear down. Operator runbooks stay outside this public tree.
 
 Runnable emit examples (same smoke as `platform-smoke-roundtrip`):
 

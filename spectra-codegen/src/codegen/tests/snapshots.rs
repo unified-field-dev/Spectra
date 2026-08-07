@@ -1,4 +1,4 @@
-use crate::codegen::emit::{generate_helpers, generate_topics, emit_sink_forward};
+use crate::codegen::emit::{emit_sink_forward, generate_helpers, generate_topics};
 use crate::codegen::parser::{parse_event_schema, parse_metric_schema};
 
 const EVENT_SCHEMA: &str = r#"

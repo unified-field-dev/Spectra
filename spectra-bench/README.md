@@ -10,7 +10,7 @@ Performance CLI for Spectra matrix scenarios and capacity experiments. Run write
 - **Query:** BM-SQ0..SQ3 — `query_*_ms` percentiles
 - **Smoke:** BM-S0..S3 — scenario timings
 
-Docs: [PERFORMANCE.md](../docs/bench/PERFORMANCE.md). Full experiment catalog and study live in the private `uf-live-cloud-lab` spectra docs.
+Docs: [PERFORMANCE.md](../docs/bench/PERFORMANCE.md). Full experiment catalog and study notes come from AWS campaign runs.
 
 ## Usage
 
@@ -34,12 +34,7 @@ cargo run -p spectra-bench --features tensorbase -- \
   run --experiment bm-sq1 --storage tensorbase --topology remote-ingest
 ```
 
-Decision-grade AWS campaigns:
-
-- Co-located: `$UF_LAB_ROOT/spectra/infra/aws/spectra/README.md`
-- Multi-DW / BM-SW7: `$UF_LAB_ROOT/spectra/infra/aws/spectra-multidw/README.md`
-
-Commit only `*-aws-*.json` under `profiling/spectra-bench/reports/`.
+Decision-grade AWS campaigns (co-located and multi-DW / BM-SW7) run on EC2 via the operator campaign. Commit only `*-aws-*.json` under `profiling/spectra-bench/reports/`.
 
 ## Sweep parameters
 

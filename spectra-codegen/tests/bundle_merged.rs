@@ -2,7 +2,7 @@
 
 use std::path::PathBuf;
 
-use spectra_codegen::{generate_bundle_merged, SpectraCodegenConfig, EmitKind};
+use spectra_codegen::{generate_bundle_merged, EmitKind, SpectraCodegenConfig};
 
 #[test]
 fn generate_bundle_merged_merges_helpers_topics_and_sink_forward() {
@@ -29,7 +29,8 @@ fn generate_bundle_merged_merges_helpers_topics_and_sink_forward() {
 
     generate_bundle_merged(&[config_a, config_b], out_dir.path()).expect("bundle merge");
 
-    let generated = std::fs::read_to_string(out_dir.path().join("spectra_generated.rs")).expect("read");
+    let generated =
+        std::fs::read_to_string(out_dir.path().join("spectra_generated.rs")).expect("read");
     assert!(generated.contains("pub mod helpers"));
     assert!(generated.contains("pub mod topics"));
     assert!(generated.contains("pub mod sink_forward"));

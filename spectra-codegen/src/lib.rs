@@ -159,8 +159,7 @@ pub fn generate_bundle_merged(
         )?);
     }
 
-    let sink_forward_tokens =
-        codegen::emit::emit_sink_forward_tokens(&all_events, &all_metrics)?;
+    let sink_forward_tokens = codegen::emit::emit_sink_forward_tokens(&all_events, &all_metrics)?;
 
     let file = quote! {
         pub mod helpers {

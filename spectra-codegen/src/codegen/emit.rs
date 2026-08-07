@@ -75,11 +75,15 @@ fn emit_event_helper(ev: &ParsedEventSchema) -> anyhow::Result<TokenStream> {
         })
         .collect();
 
-    let json_fields: Vec<_> = ev.fields.iter().map(|f| {
-        let key = &f.name;
-        let ident = format_ident!("{}", f.name);
-        quote! { map.insert(#key.to_string(), serde_json::json!(#ident)); }
-    }).collect();
+    let json_fields: Vec<_> = ev
+        .fields
+        .iter()
+        .map(|f| {
+            let key = &f.name;
+            let ident = format_ident!("{}", f.name);
+            quote! { map.insert(#key.to_string(), serde_json::json!(#ident)); }
+        })
+        .collect();
 
     Ok(quote! {
         #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -278,11 +282,15 @@ fn emit_event_topic(ev: &ParsedEventSchema) -> anyhow::Result<TokenStream> {
         })
         .collect();
 
-    let json_fields: Vec<_> = ev.fields.iter().map(|f| {
-        let key = &f.name;
-        let ident = format_ident!("{}", f.name);
-        quote! { map.insert(#key.to_string(), serde_json::json!(self.#ident)); }
-    }).collect();
+    let json_fields: Vec<_> = ev
+        .fields
+        .iter()
+        .map(|f| {
+            let key = &f.name;
+            let ident = format_ident!("{}", f.name);
+            quote! { map.insert(#key.to_string(), serde_json::json!(self.#ident)); }
+        })
+        .collect();
 
     Ok(quote! {
         pub const #topic_const: &str = #topic_expr;

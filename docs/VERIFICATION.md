@@ -70,49 +70,15 @@ PR CI: embedded e2e + stub contracts only. Live remote catalog and capacity camp
 | Query ident / paging | `uf-spectra` Features | `SECURITY.md` | `validate_spectra_ident` / `clamp_event_paging` |
 | Remote TLS / insecure opt-in | `SECURITY.md` + `SPECTRA_ALLOW_INSECURE_REMOTE` | clickhouse/tensorbase README | `RemoteTransportSecurity` |
 | URL credential redaction | `SECURITY.md` | remote-common crate docs | `redact_url_credentials` |
-| Verification gates | this file + `CONTRIBUTING.md` | rustdoc Features | e2e / AWS scripts |
+| Verification gates | this file + `CONTRIBUTING.md` | rustdoc Features | e2e / AWS campaigns |
 
-```bash
-cd infra/aws/spectra
-export AWS_KEY_NAME=your-key
-export SSH_KEY_PATH=~/.ssh/your-key.pem
-
-./provision.sh
-./bootstrap.sh
-./deploy-and-run-e2e.sh      # full ignored remote catalog + live contracts
-./deploy-and-run-bench.sh    # full BM-* × all backends (re-run BM-SQ1/SQ3 after query hardening)
-./fetch-reports.sh           # → profiling/spectra-bench/reports/
-./teardown.sh
-```
-
-Then fill scoreboards in [`docs/bench/PERFORMANCE.md`](bench/PERFORMANCE_STUDY.md) from the fetched JSON.
-
-On-host only (after bootstrap):
-
-```bash
-./infra/aws/spectra/run-e2e-aws.sh
-./infra/aws/spectra/run-bench-aws.sh
-```
-
-Details: [`infra/aws/spectra/README.md`](../infra/aws/spectra/README.md).
+Co-located ClickHouse + TensorBase campaigns run on AWS EC2: provision, bootstrap, deploy-and-run e2e/bench, fetch reports into `profiling/spectra-bench/reports/`, tear down. Then fill scoreboards in [`docs/bench/PERFORMANCE.md`](bench/PERFORMANCE_STUDY.md) from the fetched JSON.
 
 ### Multi-DW durable write (BM-SW7 primary)
 
-Separate writer + DW EC2s. Primary capacity experiment is **BM-SW7** (L2 batch). BM-SW5/SW6 are single-row protocol floor.
+Separate writer + DW EC2s. Primary capacity experiment is **BM-SW7** (L2 batch). BM-SW5/SW6 are single-row protocol floor. Multi-DW campaigns run on AWS via the operator campaign.
 
-```bash
-cd infra/aws/spectra-multidw
-export AWS_KEY_NAME=your-key SSH_KEY_PATH=~/.ssh/your-key.pem
-export SPECTRA_MULTIDW_DW_KIND=clickhouse
-export SPECTRA_BENCH_DW_N=1
-export SPECTRA_BENCH_BATCH_SWEEP=512,2048
-
-./provision.sh && ./bootstrap.sh
-./deploy-and-run.sh && ./fetch-reports.sh
-./teardown.sh
-```
-
-Details: [`infra/aws/spectra-multidw/README.md`](../infra/aws/spectra-multidw/README.md). Scoreboard: [`docs/bench/PERFORMANCE.md`](bench/PERFORMANCE_STUDY.md).
+Scoreboard: [`docs/bench/PERFORMANCE.md`](bench/PERFORMANCE_STUDY.md).
 
 ## Baseline results
 
