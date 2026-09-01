@@ -16,6 +16,7 @@ pub struct MetricsQuery {
     /// Optional step size in seconds for downsampling.
     pub step_secs: Option<u64>,
     /// Label equality matchers applied to the series.
+    #[serde(default)]
     pub label_matchers: Vec<LabelMatcher>,
 }
 
@@ -172,6 +173,7 @@ pub struct GridFilterItem {
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct GridFilterModel {
     /// Structured filter items.
+    #[serde(default)]
     pub items: Vec<GridFilterItem>,
     /// How to combine `items`.
     #[serde(default)]
