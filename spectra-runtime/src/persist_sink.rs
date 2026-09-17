@@ -452,11 +452,13 @@ mod tests {
         try_record_counter_now, NoOpSink, SharedEventBackend, SharedMetricsBackend, SpectraConfig,
     };
 
-    static PERSIST_TEST_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
-
     #[tokio::test]
     async fn batch_flush_persists_multiple_counters() {
-        let _g = PERSIST_TEST_LOCK.lock().await;
+        // Shared with spectra-runtime::builder's tests and spectra-core's own test suite, all of
+        // which install/query the same process-global config + sink — a module-local lock here
+        // does not stop those from racing with this test.
+        let _g = spectra_core::GLOBAL_TEST_LOCK.lock().await;
+        spectra_core::reset_config_and_sink_for_test();
         spectra_core::install_config(SpectraConfig {
             enabled: false,
             ..Default::default()
