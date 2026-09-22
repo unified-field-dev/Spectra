@@ -28,6 +28,15 @@ jobs:
           command: check
           arguments: --all-features
 
+  cargo-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Security audit
+        run: |
+          cargo install cargo-audit --locked
+          cargo audit
+
   fmt:
     runs-on: ubuntu-latest
     steps:
