@@ -24,7 +24,7 @@ jobs:
     env:
       SPECTRA_CLICKHOUSE_URL: http://localhost:8123
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - name: spectra-e2e embedded matrix
