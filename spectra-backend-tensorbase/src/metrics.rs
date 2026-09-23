@@ -55,9 +55,43 @@ impl TensorBaseMetricsBackend {
     /// # }
     /// ```
     pub async fn connect(url: &str) -> Result<Self> {
+        Self::connect_in_store(url, "default").await
+    }
+
+    /// Connect scoped to one Spectra `store:` name — physical per-store isolation via a
+    /// dedicated `spectra_{store}` database on the same server, created if needed. See
+    /// [`spectra_backend_remote_common::RemoteMetricsBackend::connect_in_database`] for the
+    /// two-phase connect this builds on.
+    ///
+    /// No `spectra-uf-runtime`-style host installer wires this in yet (TensorBase has no
+    /// live host installer) — this is the same connect primitive ClickHouse's per-store
+    /// wiring uses, added here for parity since both share this crate's remote-protocol
+    /// plumbing.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when `store` is not a valid Spectra identifier, or when connect,
+    /// `CREATE DATABASE`, or table DDL fails.
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// # async fn example() -> spectra_core::Result<()> {
+    /// use spectra_backend_tensorbase::TensorBaseMetricsBackend;
+    ///
+    /// let backend =
+    ///     TensorBaseMetricsBackend::connect_in_store("tcp+tls://127.0.0.1:9440", "counter")
+    ///         .await?;
+    /// # let _ = backend;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn connect_in_store(url: &str, store: &str) -> Result<Self> {
+        let database = format!("spectra_{store}");
         Ok(Self(
-            RemoteMetricsBackend::connect(
+            RemoteMetricsBackend::connect_in_database(
                 url,
+                &database,
                 StorageEngineType::TensorBase,
                 &crate::ddl::metrics_ddl(),
             )
@@ -192,5 +226,18 @@ mod tests {
             .await
             .expect("query");
         assert!(!points.is_empty());
+    }
+
+    #[tokio::test]
+    async fn connect_in_store_rejects_invalid_store_name_sad() {
+        let result = TensorBaseMetricsBackend::connect_in_store(
+            "tcp+tls://tensorbase.example:9440",
+            "bad;name",
+        )
+        .await;
+        let err = result
+            .err()
+            .expect("invalid store identifier must be rejected");
+        assert!(matches!(err, spectra_core::Error::Config(_)));
     }
 }

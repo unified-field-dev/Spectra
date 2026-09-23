@@ -56,9 +56,38 @@ impl ClickHouseEventsBackend {
     /// # }
     /// ```
     pub async fn connect(url: &str) -> Result<Self> {
+        Self::connect_in_store(url, "default").await
+    }
+
+    /// Connect scoped to one Spectra `store:` name — physical per-store isolation via a
+    /// dedicated `spectra_{store}` ClickHouse database on the same server, created if
+    /// needed. See [`spectra_backend_remote_common::RemoteEventsBackend::connect_in_database`]
+    /// for the two-phase connect this builds on.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when `store` is not a valid Spectra identifier, or when connect,
+    /// `CREATE DATABASE`, or table DDL fails.
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// # async fn example() -> spectra_core::Result<()> {
+    /// use spectra_backend_clickhouse::ClickHouseEventsBackend;
+    ///
+    /// let backend =
+    ///     ClickHouseEventsBackend::connect_in_store("https://clickhouse.example:8443", "counter")
+    ///         .await?;
+    /// # let _ = backend;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn connect_in_store(url: &str, store: &str) -> Result<Self> {
+        let database = format!("spectra_{store}");
         Ok(Self(
-            RemoteEventsBackend::connect(
+            RemoteEventsBackend::connect_in_database(
                 url,
+                &database,
                 StorageEngineType::ClickHouse,
                 &crate::ddl::events_ddl(),
             )

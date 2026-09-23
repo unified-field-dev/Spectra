@@ -39,6 +39,33 @@ impl RemoteEventsBackend {
         })
     }
 
+    /// Connect scoped to one database, creating it first if needed — physical per-store
+    /// isolation (a distinct database per `store:` name rather than one shared database).
+    /// See [`crate::RemoteMetricsBackend::connect_in_database`] for the two-phase rationale.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`spectra_core::Error::Config`] when `database` is not a valid Spectra
+    /// identifier, or a storage error when connect, `CREATE DATABASE`, or table DDL fails.
+    pub async fn connect_in_database(
+        url: &str,
+        database: &str,
+        engine: StorageEngineType,
+        events_ddl: &str,
+    ) -> Result<Self> {
+        spectra_core::validate_spectra_ident(database)?;
+        let bootstrap = RemoteClient::connect(url).await?;
+        bootstrap
+            .execute(&format!("CREATE DATABASE IF NOT EXISTS {database}"))
+            .await?;
+        let client = Arc::new(RemoteClient::connect_scoped(url, database).await?);
+        client.execute(events_ddl).await?;
+        Ok(Self {
+            inner: EventsInner::Remote(client),
+            engine,
+        })
+    }
+
     /// In-memory backend for unit tests (no remote server required).
     pub fn in_memory_for_test(engine: StorageEngineType) -> Self {
         Self {

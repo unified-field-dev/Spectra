@@ -56,9 +56,38 @@ impl ClickHouseMetricsBackend {
     /// # }
     /// ```
     pub async fn connect(url: &str) -> Result<Self> {
+        Self::connect_in_store(url, "default").await
+    }
+
+    /// Connect scoped to one Spectra `store:` name — physical per-store isolation via a
+    /// dedicated `spectra_{store}` ClickHouse database on the same server, created if
+    /// needed. See [`spectra_backend_remote_common::RemoteMetricsBackend::connect_in_database`]
+    /// for the two-phase connect this builds on.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when `store` is not a valid Spectra identifier, or when connect,
+    /// `CREATE DATABASE`, or table DDL fails.
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// # async fn example() -> spectra_core::Result<()> {
+    /// use spectra_backend_clickhouse::ClickHouseMetricsBackend;
+    ///
+    /// let backend =
+    ///     ClickHouseMetricsBackend::connect_in_store("https://clickhouse.example:8443", "counter")
+    ///         .await?;
+    /// # let _ = backend;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn connect_in_store(url: &str, store: &str) -> Result<Self> {
+        let database = format!("spectra_{store}");
         Ok(Self(
-            RemoteMetricsBackend::connect(
+            RemoteMetricsBackend::connect_in_database(
                 url,
+                &database,
                 StorageEngineType::ClickHouse,
                 &crate::ddl::metrics_ddl(),
             )
@@ -173,5 +202,53 @@ mod tests {
             .await
             .expect("query");
         assert!(!points.is_empty());
+    }
+
+    #[tokio::test]
+    async fn connect_in_store_rejects_invalid_store_name_sad() {
+        // Validation runs before any network I/O, so this is a plain (non-`#[ignore]`)
+        // unit test even though `connect_in_store` is otherwise a remote-connect API.
+        let result = ClickHouseMetricsBackend::connect_in_store(
+            "https://clickhouse.example:8443",
+            "bad; store",
+        )
+        .await;
+        let err = result
+            .err()
+            .expect("invalid store identifier must be rejected");
+        assert!(matches!(err, spectra_core::Error::Config(_)));
+    }
+
+    #[tokio::test]
+    #[ignore = "requires SPECTRA_CLICKHOUSE_URL"]
+    async fn clickhouse_metrics_connect_in_store_isolates_databases_integration() {
+        let url = std::env::var("SPECTRA_CLICKHOUSE_URL").expect("SPECTRA_CLICKHOUSE_URL");
+        let store_a =
+            ClickHouseMetricsBackend::connect_in_store(&url, "isolation_integration_test_a")
+                .await
+                .expect("connect store a");
+        let store_b =
+            ClickHouseMetricsBackend::connect_in_store(&url, "isolation_integration_test_b")
+                .await
+                .expect("connect store b");
+        let ts = Utc::now();
+        store_a
+            .record_counter("isolation_integration_hits", &json!({}), 1, ts)
+            .await
+            .expect("write store a");
+
+        let seen_in_b = store_b
+            .query_range(MetricsQueryRange {
+                metric_name: "isolation_integration_hits".into(),
+                start: ts - Duration::seconds(5),
+                end: ts + Duration::seconds(5),
+                label_matchers: vec![],
+            })
+            .await
+            .expect("query store b");
+        assert!(
+            seen_in_b.is_empty(),
+            "store a's row must not be visible from store b's database"
+        );
     }
 }

@@ -85,6 +85,8 @@ struct NativeEndpoint {
     cli: PathBuf,
     /// When true, pass `--secure` to `clickhouse-client` (native TLS).
     secure: bool,
+    /// Database to scope every command to via `--database` (per-store isolation).
+    database: Option<String>,
 }
 
 /// Streaming insert handle (HTTP RowBinary or native SQL insert).
@@ -116,6 +118,32 @@ impl RemoteClient {
         url: &str,
         security: RemoteTransportSecurity,
     ) -> Result<Self> {
+        Self::connect_with_security_and_database(url, security, None).await
+    }
+
+    /// Connect scoped to one database — every query/DDL/insert this client issues targets
+    /// `database` for unqualified table names (physical per-store isolation). The caller
+    /// is responsible for ensuring `database` already exists (see
+    /// [`RemoteMetricsBackend::connect_in_database`](crate::RemoteMetricsBackend::connect_in_database)).
+    pub async fn connect_scoped(url: &str, database: &str) -> Result<Self> {
+        Self::connect_scoped_with_security(url, database, RemoteTransportSecurity::from_env()).await
+    }
+
+    /// [`Self::connect_scoped`] with an explicit [`RemoteTransportSecurity`] policy.
+    pub async fn connect_scoped_with_security(
+        url: &str,
+        database: &str,
+        security: RemoteTransportSecurity,
+    ) -> Result<Self> {
+        Self::connect_with_security_and_database(url, security, Some(database)).await
+    }
+
+    #[tracing::instrument(name = "spectra.remote.connect", skip_all)]
+    async fn connect_with_security_and_database(
+        url: &str,
+        security: RemoteTransportSecurity,
+        database: Option<&str>,
+    ) -> Result<Self> {
         security.check_url(url)?;
         match RemoteUrlKind::parse(url)? {
             (RemoteUrlKind::Native { secure }, addr) => {
@@ -127,6 +155,7 @@ impl RemoteClient {
                         port,
                         cli,
                         secure,
+                        database: database.map(str::to_string),
                     }),
                 })
             }
@@ -147,6 +176,9 @@ impl RemoteClient {
                     }
                 } else {
                     client = client.with_url(http_url);
+                }
+                if let Some(database) = database {
+                    client = client.with_database(database);
                 }
                 Ok(Self {
                     inner: ClientInner::Http(client),
@@ -404,6 +436,9 @@ fn native_command(endpoint: &NativeEndpoint) -> tokio::process::Command {
     cmd.arg("--port").arg(endpoint.port.to_string());
     if endpoint.secure {
         cmd.arg("--secure");
+    }
+    if let Some(database) = &endpoint.database {
+        cmd.arg("--database").arg(database);
     }
     cmd
 }

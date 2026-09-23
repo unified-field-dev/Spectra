@@ -1,5 +1,6 @@
 //! Build and install a Spectra runtime with injected storage backends.
 
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use spectra_core::{
@@ -133,6 +134,8 @@ impl Spectra {
 pub struct SpectraBuilder {
     metrics: Option<SharedMetricsBackend>,
     events: Option<SharedEventBackend>,
+    store_metrics: HashMap<String, SharedMetricsBackend>,
+    store_events: HashMap<String, SharedEventBackend>,
     config: Option<SpectraConfig>,
     transport_sink: Option<Arc<dyn SpectraSink>>,
     embedded: bool,
@@ -152,6 +155,8 @@ impl SpectraBuilder {
         Self {
             metrics: None,
             events: None,
+            store_metrics: HashMap::new(),
+            store_events: HashMap::new(),
             config: None,
             transport_sink: None,
             embedded: false,
@@ -161,14 +166,66 @@ impl SpectraBuilder {
     }
 
     /// Register the metrics storage backend (required before [`Self::build`]).
+    ///
+    /// This is the backend for the `"default"` store and the fallback for any declared
+    /// store with no [`Self::store_backend`] entry of its own.
     pub fn metrics_backend(mut self, backend: SharedMetricsBackend) -> Self {
         self.metrics = Some(backend);
         self
     }
 
     /// Register the events storage backend (required before [`Self::build`]).
+    ///
+    /// This is the backend for the `"default"` store and the fallback for any declared
+    /// store with no [`Self::store_backend`] entry of its own.
     pub fn events_backend(mut self, backend: SharedEventBackend) -> Self {
         self.events = Some(backend);
+        self
+    }
+
+    /// Register a dedicated metrics/events backend pair for one non-default `store:` name.
+    ///
+    /// Every schema whose `spectra_schema!`/`spectra_metric!` declares this `store` name
+    /// resolves to `metrics`/`events` instead of the default backend from
+    /// [`Self::metrics_backend`]/[`Self::events_backend`]. Calling this twice for the same
+    /// store name overwrites the earlier registration (last call wins). Hosts typically
+    /// call this once per name from [`spectra_core::collect_distinct_spectra_store_names`]
+    /// rather than hardcoding store names.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use std::sync::Arc;
+    /// use spectra_backend_mem::{MemEventsBackend, MemMetricsBackend};
+    /// use spectra_runtime::Spectra;
+    ///
+    /// # fn example() -> spectra_core::Result<()> {
+    /// let spectra = Spectra::builder()
+    ///     .metrics_backend(Arc::new(MemMetricsBackend::new())) // "default" store
+    ///     .events_backend(Arc::new(MemEventsBackend::new()))
+    ///     .store_backend(
+    ///         "counter",
+    ///         Arc::new(MemMetricsBackend::new()),
+    ///         Arc::new(MemEventsBackend::new()),
+    ///     )
+    ///     .embedded()
+    ///     .build()?;
+    ///
+    /// // Any schema whose `spectra_schema!`/`spectra_metric!` declares `store: "counter"`
+    /// // now resolves to the dedicated backend above, not the default one.
+    /// # let _ = spectra;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn store_backend(
+        mut self,
+        store: impl Into<String>,
+        metrics: SharedMetricsBackend,
+        events: SharedEventBackend,
+    ) -> Self {
+        let store = store.into();
+        self.store_metrics.insert(store.clone(), metrics);
+        self.store_events.insert(store, events);
         self
     }
 
@@ -245,7 +302,7 @@ impl SpectraBuilder {
             .events
             .ok_or_else(|| spectra_core::Error::config("events_backend is required"))?;
 
-        let router = build_router(metrics, events);
+        let router = build_router(metrics, events, self.store_metrics, self.store_events);
         let router = Arc::new(router);
         SpectraRouter::set_global(Arc::clone(&router));
 
@@ -288,18 +345,50 @@ impl SpectraBuilder {
     }
 }
 
-fn build_router(metrics: SharedMetricsBackend, events: SharedEventBackend) -> SpectraRouter {
+fn build_router(
+    metrics: SharedMetricsBackend,
+    events: SharedEventBackend,
+    store_metrics: HashMap<String, SharedMetricsBackend>,
+    store_events: HashMap<String, SharedEventBackend>,
+) -> SpectraRouter {
+    build_router_from_registry(
+        metrics,
+        events,
+        store_metrics,
+        store_events,
+        SchemaRegistry::global(),
+    )
+}
+
+/// Registry-parameterized core of [`build_router`] (split out for isolated unit testing —
+/// `SchemaRegistry::global()` is a process-wide singleton that real schemas auto-register
+/// into, so tests exercising specific store-name dispatch build their own registry instead).
+fn build_router_from_registry(
+    metrics: SharedMetricsBackend,
+    events: SharedEventBackend,
+    store_metrics: HashMap<String, SharedMetricsBackend>,
+    store_events: HashMap<String, SharedEventBackend>,
+    registry: &SchemaRegistry,
+) -> SpectraRouter {
     let router = SpectraRouter::with_defaults(Arc::clone(&metrics), Arc::clone(&events));
-    for name in SchemaRegistry::global().list_schemas() {
-        let Some(meta) = SchemaRegistry::global().get_schema(name) else {
+    for name in registry.list_schemas() {
+        let Some(meta) = registry.get_schema(name) else {
             continue;
         };
         match meta.logging_kind {
             LoggingKind::Event => {
-                router.register_event_backend(name, Arc::clone(&events));
+                let backend = store_events
+                    .get(&meta.store)
+                    .cloned()
+                    .unwrap_or_else(|| Arc::clone(&events));
+                router.register_event_backend(name, backend);
             }
             LoggingKind::Metric => {
-                router.register_metrics_backend(name, Arc::clone(&metrics));
+                let backend = store_metrics
+                    .get(&meta.store)
+                    .cloned()
+                    .unwrap_or_else(|| Arc::clone(&metrics));
+                router.register_metrics_backend(name, backend);
             }
         }
     }
@@ -310,13 +399,104 @@ fn build_router(metrics: SharedMetricsBackend, events: SharedEventBackend) -> Sp
 mod tests {
     use super::*;
     use spectra_backend_mem::{MemEventsBackend, MemMetricsBackend};
-    use spectra_core::{try_record_counter_now, RecordingSink, SpectraConfig};
+    use spectra_core::{try_record_counter_now, RecordingSink, SchemaMetadata, SpectraConfig};
 
     fn mem_backends() -> (SharedMetricsBackend, SharedEventBackend) {
         (
             Arc::new(MemMetricsBackend::new()),
             Arc::new(MemEventsBackend::new()),
         )
+    }
+
+    fn schema(
+        table_or_metric: &str,
+        store: &str,
+        logging_kind: LoggingKind,
+    ) -> &'static SchemaMetadata {
+        Box::leak(Box::new(SchemaMetadata {
+            table_or_metric: table_or_metric.to_string(),
+            store: store.to_string(),
+            logging_kind,
+            ..Default::default()
+        }))
+    }
+
+    #[test]
+    fn build_router_uses_registered_store_backend_happy() {
+        let mut registry = SchemaRegistry::new();
+        registry.register(schema("store_a_metric", "a", LoggingKind::Metric));
+        registry.register(schema("store_a_event", "a", LoggingKind::Event));
+        registry.register(schema("store_b_metric", "b", LoggingKind::Metric));
+
+        let (default_metrics, default_events) = mem_backends();
+        let (a_metrics, a_events) = mem_backends();
+        let mut store_metrics = HashMap::new();
+        store_metrics.insert("a".to_string(), Arc::clone(&a_metrics));
+        let mut store_events = HashMap::new();
+        store_events.insert("a".to_string(), Arc::clone(&a_events));
+
+        let router = build_router_from_registry(
+            Arc::clone(&default_metrics),
+            Arc::clone(&default_events),
+            store_metrics,
+            store_events,
+            &registry,
+        );
+
+        assert!(Arc::ptr_eq(
+            &router.resolve_metrics("store_a_metric"),
+            &a_metrics
+        ));
+        assert!(Arc::ptr_eq(
+            &router.resolve_event("store_a_event"),
+            &a_events
+        ));
+        // "b" has no explicit registration in store_metrics — see the sad-path test below.
+        assert!(!Arc::ptr_eq(
+            &router.resolve_metrics("store_b_metric"),
+            &a_metrics
+        ));
+    }
+
+    #[test]
+    fn build_router_falls_back_to_default_for_unregistered_store_sad() {
+        let mut registry = SchemaRegistry::new();
+        registry.register(schema("store_b_metric", "b", LoggingKind::Metric));
+
+        let (default_metrics, default_events) = mem_backends();
+        // No entry for store "b" in either map — a host that only declares the "default"
+        // store must not regress: every schema still resolves to the default backend.
+        let router = build_router_from_registry(
+            Arc::clone(&default_metrics),
+            Arc::clone(&default_events),
+            HashMap::new(),
+            HashMap::new(),
+            &registry,
+        );
+
+        assert!(Arc::ptr_eq(
+            &router.resolve_metrics("store_b_metric"),
+            &default_metrics
+        ));
+    }
+
+    #[test]
+    fn store_backend_overwrite_last_registration_wins_happy() {
+        let (m1, e1) = mem_backends();
+        let (m2, e2) = mem_backends();
+
+        let builder = SpectraBuilder::new()
+            .store_backend("x", Arc::clone(&m1), Arc::clone(&e1))
+            .store_backend("x", Arc::clone(&m2), Arc::clone(&e2));
+
+        assert!(Arc::ptr_eq(
+            builder.store_metrics.get("x").expect("registered"),
+            &m2
+        ));
+        assert!(Arc::ptr_eq(
+            builder.store_events.get("x").expect("registered"),
+            &e2
+        ));
     }
 
     async fn with_isolated_runtime<F, Fut>(f: F)
