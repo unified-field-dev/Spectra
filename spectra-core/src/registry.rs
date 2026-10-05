@@ -242,6 +242,6 @@ mod tests {
     #[test]
     fn registry_empty_when_no_submissions_in_test_crate() {
         let reg = SchemaRegistry::new();
-        assert!(reg.list_schemas().is_empty());
+        assert_eq!(reg.list_schemas(), Vec::<&str>::new());
     }
 }

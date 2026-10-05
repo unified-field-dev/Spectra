@@ -50,8 +50,8 @@ async fn request_scope_buffers_until_drain() {
     })
     .await;
 
-    assert!(sink.counters().is_empty());
-    assert!(sink.events().is_empty());
+    assert_eq!(sink.counters(), vec![]);
+    assert_eq!(sink.events(), vec![]);
     assert_eq!(records.len(), 2);
 
     drain(records);
@@ -90,7 +90,7 @@ async fn nested_request_scope_drains_once() {
     })
     .await;
 
-    assert!(sink.counters().is_empty());
+    assert_eq!(sink.counters(), vec![]);
     assert_eq!(records.len(), 2);
     drain(records);
     assert_eq!(sink.counters().len(), 2);
@@ -203,8 +203,8 @@ async fn worker_scope_drains_blocking_at_end() {
     worker_scope_gated(true, async {
         crate::try_record_counter("c", &[], 1);
         crate::try_log_event("t", &serde_json::json!({}));
-        assert!(sink.counters().is_empty());
-        assert!(sink.events().is_empty());
+        assert_eq!(sink.counters(), vec![]);
+        assert_eq!(sink.events(), vec![]);
     })
     .await;
 
@@ -237,7 +237,7 @@ async fn nested_worker_scope_drains_once() {
             crate::try_record_counter("inner", &[], 1);
         })
         .await;
-        assert!(sink.counters().is_empty());
+        assert_eq!(sink.counters(), vec![]);
     })
     .await;
 

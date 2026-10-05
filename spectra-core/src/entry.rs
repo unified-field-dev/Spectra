@@ -171,9 +171,10 @@ mod tests {
         let recording = Arc::new(RecordingSink::new());
         set_sink(Arc::clone(&recording) as Arc<dyn SpectraSink>);
         try_record_counter("evil; DROP", &[], 1);
-        assert!(recording
-            .recorded_counters_matching("evil; DROP", &[])
-            .is_empty());
+        assert_eq!(
+            recording.recorded_counters_matching("evil; DROP", &[]),
+            vec![]
+        );
         try_record_counter("cache_hits", &[], 1);
         assert_eq!(
             recording
