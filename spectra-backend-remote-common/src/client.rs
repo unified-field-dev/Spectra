@@ -298,6 +298,43 @@ impl RemoteClient {
         }
     }
 
+    /// Fetch aggregate rows `(label, value)` from a query selecting `label String` and
+    /// `value Float64` (see [`crate::query_sql::aggregate_sql`]).
+    #[tracing::instrument(name = "spectra.remote.query_aggregate_rows", skip_all, fields(sql_len = sql.len()))]
+    pub async fn query_aggregate_rows(&self, sql: &str) -> Result<Vec<(String, f64)>> {
+        match &self.inner {
+            ClientInner::Http(client) => {
+                #[derive(clickhouse::Row, serde::Deserialize)]
+                struct AggregateRow {
+                    label: String,
+                    value: f64,
+                }
+                let rows = client
+                    .query(sql)
+                    .fetch_all::<AggregateRow>()
+                    .await
+                    .map_err(map_remote)?;
+                Ok(rows.into_iter().map(|r| (r.label, r.value)).collect())
+            }
+            ClientInner::Native(endpoint) => {
+                let lines = run_native_select(endpoint, sql).await?;
+                let mut out = Vec::with_capacity(lines.len());
+                for cols in lines {
+                    let [label, value] = cols.as_slice() else {
+                        return Err(Error::storage(format!(
+                            "aggregate query returned {} columns, expected 2 \
+                             (operation=query_aggregate_rows)",
+                            cols.len()
+                        )));
+                    };
+                    let value = value.parse::<f64>().map_err(map_remote)?;
+                    out.push((label.clone(), value));
+                }
+                Ok(out)
+            }
+        }
+    }
+
     /// Begin a streaming insert into `spectra_metrics`.
     pub async fn insert_metrics(&self) -> Result<RemoteInsert<MetricInsertRow>> {
         match &self.inner {

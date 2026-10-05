@@ -6,7 +6,7 @@
 //! - [`crate::ddl::metrics_ddl`] / [`crate::ddl::events_ddl`] — canonical MergeTree DDL
 //! - Set `SPECTRA_CLICKHOUSE_URL` for integration tests (`cargo test -- --ignored`).
 //! - JSON labels and event fields are stored as `String` columns.
-//! - `query_aggregate` is not yet implemented (returns empty series).
+//! - `query_aggregate` computes chart aggregates in ClickHouse with one `GROUP BY` query.
 
 mod ddl;
 mod events;

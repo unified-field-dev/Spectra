@@ -8,7 +8,8 @@
 //! - [`default_url`] — build `tcp://host:9528` for native protocol
 //! - Set `SPECTRA_TENSORBASE_URL` for integration tests (`cargo test -- --ignored`).
 //! - DDL uses `ENGINE = BaseStorage` (TensorBase dialect, not MergeTree).
-//! - `query_aggregate` is not yet implemented (returns empty series).
+//! - `query_aggregate` sends the same ClickHouse-dialect `GROUP BY` SQL as the ClickHouse
+//!   adapter. A TensorBase build without those JSON functions returns a storage error.
 
 mod ddl;
 mod events;

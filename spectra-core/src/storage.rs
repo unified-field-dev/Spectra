@@ -126,6 +126,47 @@ pub struct EventsAggregateFilter {
     pub view: crate::query::EventExploreView,
 }
 
+impl EventsAggregateFilter {
+    /// Bucket width used when `time_bucket_secs` is unset.
+    pub const DEFAULT_TIME_BUCKET_SECS: u64 = 3600;
+
+    /// Effective time bucket width in seconds (never zero).
+    #[must_use]
+    pub fn bucket_secs(&self) -> u64 {
+        self.time_bucket_secs
+            .unwrap_or(Self::DEFAULT_TIME_BUCKET_SECS)
+            .max(1)
+    }
+
+    /// Trimmed slice group-by field, or `None` when unset or blank.
+    #[must_use]
+    pub fn group_by_field_name(&self) -> Option<&str> {
+        self.group_by_field
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+    }
+
+    /// Trimmed, non-blank Table row-key fields in request order.
+    #[must_use]
+    pub fn row_field_names(&self) -> Vec<String> {
+        self.row_fields
+            .iter()
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+            .collect()
+    }
+
+    /// Trimmed Table pivot field, or `None` when unset or blank.
+    #[must_use]
+    pub fn pivot_field_name(&self) -> Option<&str> {
+        self.pivot_field
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+    }
+}
+
 /// Metric point for query results.
 #[derive(Debug, Clone)]
 pub struct MetricPoint {

@@ -6,7 +6,8 @@ use chrono::{Duration, Utc};
 use serde_json::json;
 use spectra::spectra_core::LabelMatcher;
 use spectra::spectra_core::{
-    EventStorageBackend, EventsQueryFilter, GridFilterItem, GridFilterModel, GridFilterOperator,
+    EventAggregateResult, EventExploreView, EventMeasure, EventStorageBackend,
+    EventsAggregateFilter, EventsQueryFilter, GridFilterItem, GridFilterModel, GridFilterOperator,
     MetricsQueryRange, MetricsStorageBackend, Result,
 };
 
@@ -22,6 +23,7 @@ pub async fn run_storage_contract(
     event_contains_filter(events.as_ref()).await?;
     event_sort_and_pagination(events.as_ref()).await?;
     event_partition_filter(events.as_ref()).await?;
+    event_aggregate_views(events.as_ref()).await?;
     label_filter_hit(metrics.as_ref()).await?;
     label_filter_miss(metrics.as_ref()).await?;
     time_range_empty(metrics.as_ref()).await?;
@@ -263,4 +265,164 @@ async fn time_range_empty(metrics: &dyn MetricsStorageBackend) -> Result<()> {
         .await?;
     assert!(points.is_empty(), "time range empty");
     Ok(())
+}
+
+/// Every chart view must aggregate real rows, not return an empty stub.
+async fn event_aggregate_views(events: &dyn EventStorageBackend) -> Result<()> {
+    let ts = Utc::now();
+    let table = "contract_aggregate";
+    for fields in [
+        json!({"severity": "info", "region": "us", "bytes": 10}),
+        json!({"severity": "warn", "region": "us", "bytes": 5}),
+        json!({"severity": "info", "region": "eu", "bytes": 7}),
+        // No severity; string bytes must not count toward Sum.
+        json!({"region": "eu", "bytes": "1"}),
+    ] {
+        events.append_row(table, &fields, ts, None).await?;
+    }
+    let base = EventsAggregateFilter {
+        table: table.into(),
+        start: ts - Duration::seconds(1),
+        end: ts + Duration::seconds(1),
+        partition: None,
+        filter: GridFilterModel::default(),
+        measure: EventMeasure::Count,
+        measure_field: None,
+        time_bucket_secs: Some(60),
+        group_by_field: None,
+        row_fields: Vec::new(),
+        pivot_field: None,
+        view: EventExploreView::TimeSeries,
+    };
+
+    let count = events.query_aggregate(base.clone()).await?;
+    assert_eq!(series_total(&count), 4.0, "aggregate time series count");
+
+    let sum = events
+        .query_aggregate(EventsAggregateFilter {
+            view: EventExploreView::LineChart,
+            measure: EventMeasure::Sum,
+            measure_field: Some("bytes".into()),
+            ..base.clone()
+        })
+        .await?;
+    assert_eq!(series_total(&sum), 22.0, "aggregate time series sum");
+
+    let by_severity = EventsAggregateFilter {
+        view: EventExploreView::PieChart,
+        group_by_field: Some("severity".into()),
+        ..base.clone()
+    };
+    let pie = events.query_aggregate(by_severity.clone()).await?;
+    assert_eq!(
+        slices(&pie),
+        vec![("info".to_string(), 2.0), ("warn".to_string(), 1.0)],
+        "aggregate pie count excludes rows without the group field"
+    );
+
+    let bar = events
+        .query_aggregate(EventsAggregateFilter {
+            view: EventExploreView::BarChart,
+            group_by_field: Some("region".into()),
+            measure: EventMeasure::Sum,
+            measure_field: Some("bytes".into()),
+            ..base.clone()
+        })
+        .await?;
+    assert_eq!(
+        slices(&bar),
+        vec![("eu".to_string(), 7.0), ("us".to_string(), 15.0)],
+        "aggregate bar sum"
+    );
+
+    let filtered = events
+        .query_aggregate(EventsAggregateFilter {
+            filter: GridFilterModel {
+                items: vec![GridFilterItem {
+                    field: "region".into(),
+                    operator: GridFilterOperator::Equals,
+                    value: json!("us"),
+                }],
+                ..Default::default()
+            },
+            ..by_severity.clone()
+        })
+        .await?;
+    assert_eq!(
+        slices(&filtered),
+        vec![("info".to_string(), 1.0), ("warn".to_string(), 1.0)],
+        "aggregate honors the grid filter"
+    );
+
+    let missing = events
+        .query_aggregate(EventsAggregateFilter {
+            group_by_field: Some("no_such_field".into()),
+            ..by_severity
+        })
+        .await?;
+    match missing {
+        EventAggregateResult::Slices { slices, headline } => {
+            assert!(
+                slices.is_empty() && headline.is_empty(),
+                "missing group field"
+            );
+        }
+        other => panic!("expected slices for missing group field, got {other:?}"),
+    }
+
+    let pivot = events
+        .query_aggregate(EventsAggregateFilter {
+            view: EventExploreView::Table,
+            row_fields: vec!["region".into()],
+            pivot_field: Some("severity".into()),
+            ..base
+        })
+        .await?;
+    match pivot {
+        EventAggregateResult::Pivot {
+            row_fields,
+            column_keys,
+            rows,
+            ..
+        } => {
+            assert_eq!(row_fields, vec!["region".to_string()]);
+            assert_eq!(
+                column_keys,
+                vec!["info", "(blank)", "warn"],
+                "pivot columns"
+            );
+            let cells: Vec<(Vec<String>, Vec<f64>)> =
+                rows.into_iter().map(|r| (r.row_values, r.cells)).collect();
+            assert_eq!(
+                cells,
+                vec![
+                    (vec!["eu".to_string()], vec![1.0, 1.0, 0.0]),
+                    (vec!["us".to_string()], vec![1.0, 0.0, 1.0]),
+                ],
+                "pivot cells"
+            );
+        }
+        other => panic!("expected pivot, got {other:?}"),
+    }
+    Ok(())
+}
+
+fn series_total(result: &EventAggregateResult) -> f64 {
+    match result {
+        EventAggregateResult::TimeSeries { series, .. } => series
+            .iter()
+            .flat_map(|s| s.points.iter())
+            .map(|p| p.value)
+            .sum(),
+        other => panic!("expected time series, got {other:?}"),
+    }
+}
+
+fn slices(result: &EventAggregateResult) -> Vec<(String, f64)> {
+    match result {
+        EventAggregateResult::Slices { slices, .. } => {
+            slices.iter().map(|s| (s.label.clone(), s.value)).collect()
+        }
+        other => panic!("expected slices, got {other:?}"),
+    }
 }

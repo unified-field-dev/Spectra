@@ -25,7 +25,8 @@
 //! - Storage errors pass through [`redact_url_credentials`] so URL userinfo is not echoed.
 //! - Remote connect rejects plaintext `http://` / `tcp://` unless
 //!   `SPECTRA_ALLOW_INSECURE_REMOTE=1` (prefer `https://` / `tcp+tls://`).
-//! - `query_aggregate` is not yet implemented (returns empty series).
+//! - `query_aggregate` runs one `GROUP BY` query per chart ([`query_sql::aggregate_sql`]) and
+//!   returns at most [`query_sql::AGGREGATE_GROUP_LIMIT`] groups.
 //! - Label filtering on metric range queries happens client-side after fetch.
 //!
 //! See also: the `spectra` crate documentation map (`cargo doc -p uf-spectra --open`).

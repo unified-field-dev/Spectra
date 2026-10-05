@@ -49,4 +49,4 @@ Integration tests: set `SPECTRA_TENSORBASE_URL` (and `SPECTRA_ALLOW_INSECURE_REM
 
 ## Status
 
-Shipped in tag `v0.1.0`. `query_aggregate` is not yet implemented (returns empty series).
+Shipped in tag `v0.1.0`. `query_aggregate` sends the same ClickHouse-dialect `GROUP BY` SQL as the ClickHouse adapter; a TensorBase build without those JSON functions returns a storage error.

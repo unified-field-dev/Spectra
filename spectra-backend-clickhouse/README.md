@@ -38,4 +38,4 @@ Integration tests: set `SPECTRA_CLICKHOUSE_URL` (and `SPECTRA_ALLOW_INSECURE_REM
 
 ## Status
 
-Shipped in tag `v0.1.0`. `query_aggregate` is not yet implemented (returns empty series).
+Shipped in tag `v0.1.0`. `query_aggregate` computes chart aggregates in ClickHouse with one `GROUP BY` query per chart, capped at 10,000 groups.

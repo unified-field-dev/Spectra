@@ -157,7 +157,7 @@ API details: [`spectra/README.md`](spectra/README.md) and `cargo doc -p uf-spect
 
 | Capability | Status |
 |------------|--------|
-| Event chart aggregates (`query_aggregate`) | **Stub** — returns empty series on sqlite and remote backends; `Count` only on mem |
+| Event chart aggregates (`query_aggregate`) | ClickHouse and TensorBase aggregate in the database (up to 10,000 groups). Mem and sqlite aggregate in process over at most 1,000 rows |
 | Batched partition exports | **Your application** — batch export jobs live outside this library |
 | CI demo schemas (`platform_smoke_*`) | Illustrate macros + inventory; define product schemas in your repo |
 

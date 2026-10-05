@@ -85,8 +85,8 @@ pub use query::{
 };
 pub use query_map::{
     aggregate_event_rows, aggregate_request_to_filter, aggregate_rows_to_result,
-    event_query_to_filter, list_schemas, metrics_query_to_range, points_to_metrics_result,
-    rows_to_event_result, schema_detail,
+    event_query_to_filter, list_schemas, metrics_query_to_range, pivot_from_cells,
+    points_to_metrics_result, rows_to_event_result, schema_detail, PivotCell, PIVOT_BLANK_LABEL,
 };
 pub use registry::{
     collect_distinct_spectra_store_names, LoggingKind, SchemaFieldMetadata, SchemaMetadata,
