@@ -4,8 +4,7 @@
 Usage: fill-bench-scoreboard.py [REPORT_DIR]
 
 REPORT_DIR (or SPECTRA_BENCH_REPORT_DIR) defaults to profiling/spectra-bench/reports.
-For decision-grade numbers, point it at spectra/reports/bench/ in the lab repo
-(uf-live-cloud-lab).
+For decision-grade numbers, point it at a directory of AWS campaign JSON.
 """
 
 from __future__ import annotations

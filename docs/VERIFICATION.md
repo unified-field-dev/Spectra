@@ -72,7 +72,7 @@ PR CI: embedded e2e + stub contracts only. Live remote catalog and capacity camp
 | URL credential redaction | `SECURITY.md` | remote-common crate docs | `redact_url_credentials` |
 | Verification gates | this file + `CONTRIBUTING.md` | rustdoc Features | e2e / AWS campaigns |
 
-Co-located ClickHouse + TensorBase campaigns run on AWS EC2: provision, bootstrap, deploy-and-run e2e/bench, fetch reports into the lab repo (uf-live-cloud-lab) under `spectra/reports/bench/`, tear down. Then fill scoreboards in [`docs/bench/PERFORMANCE.md`](bench/PERFORMANCE_STUDY.md) from the fetched JSON.
+Co-located ClickHouse + TensorBase campaigns run on AWS EC2: provision, bootstrap, deploy-and-run e2e/bench, fetch reports, tear down. Then fill scoreboards in [`docs/bench/PERFORMANCE.md`](bench/PERFORMANCE_STUDY.md) from the fetched JSON. Decision-grade AWS results aren't committed to this repo.
 
 ### Multi-DW durable write (BM-SW7 ceiling, BM-SW8 zero-loss)
 

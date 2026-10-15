@@ -43,7 +43,7 @@ cargo run -p spectra-bench --features tensorbase -- \
   run --experiment bm-sq1 --storage tensorbase --topology remote-ingest
 ```
 
-Decision-grade AWS campaigns (co-located and multi-DW / BM-SW7) run on EC2 via the operator campaign. Runs write to `profiling/spectra-bench/reports/` as local scratch (gitignored). Keep only `*-aws-*.json`, in the lab repo (uf-live-cloud-lab) under `spectra/reports/bench/`.
+Decision-grade AWS campaigns (co-located and multi-DW / BM-SW7) run on EC2 via the operator campaign. Runs write to `profiling/spectra-bench/reports/` as local scratch (gitignored). Decision-grade AWS results aren't committed to this repo.
 
 ## Sweep parameters
 
