@@ -4,3 +4,7 @@
 
 # Local Sentrux quality-gate config (dev artifact; not part of upstream)
 .sentrux/
+
+# Bench reports live in uf-live-cloud-lab/spectra/reports/bench/
+/profiling/spectra-bench/reports/*
+!/profiling/spectra-bench/reports/README.md

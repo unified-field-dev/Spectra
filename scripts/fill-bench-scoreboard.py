@@ -1,15 +1,28 @@
 #!/usr/bin/env python3
-"""Fill PERFORMANCE_STUDY.md scoreboard tables from profiling/spectra-bench/reports/*.json."""
+"""Fill PERFORMANCE_STUDY.md scoreboard tables from bench report JSON.
+
+Usage: fill-bench-scoreboard.py [REPORT_DIR]
+
+REPORT_DIR (or SPECTRA_BENCH_REPORT_DIR) defaults to profiling/spectra-bench/reports.
+For decision-grade numbers, point it at spectra/reports/bench/ in the lab repo
+(uf-live-cloud-lab).
+"""
 
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-REPORTS = ROOT / "profiling" / "spectra-bench" / "reports"
+REPORTS = Path(
+    sys.argv[1]
+    if len(sys.argv) > 1
+    else os.environ.get("SPECTRA_BENCH_REPORT_DIR")
+    or ROOT / "profiling" / "spectra-bench" / "reports"
+)
 STUDY = ROOT / "docs" / "bench" / "PERFORMANCE_STUDY.md"
 
 
