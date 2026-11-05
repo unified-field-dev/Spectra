@@ -72,7 +72,8 @@ jobs:
           cargo test -p uf-spectra-core -p spectra-macros \
                      -p spectra-backend-mem -p spectra-backend-sqlite \
                      -p spectra-backend-tensorbase -p spectra-backend-clickhouse \
-                     -p spectra-runtime -p uf-spectra
+                     -p spectra-runtime -p uf-spectra \
+                     -p uf-spectra-photon
       - name: Smoke inventory
         run: |
           export CARGO_TARGET_DIR=target-spectra-extract

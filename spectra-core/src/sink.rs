@@ -19,7 +19,8 @@
 //! `try_log_event_now` (or a storage backend). The `spectra` crate documents the full
 //! publisher/consumer split under **Getting started → Publish-consume**. Spectra does not embed a bus;
 //! [Photon](https://github.com/unified-field-dev/photon) (`uf-photon`) is a common host choice
-//! for durable pub/sub.
+//! for durable pub/sub, and the `uf-spectra-photon` crate ships a ready-made Photon publish sink
+//! and a batched, consumer-group storage writer.
 //!
 //! ```ignore
 //! use std::sync::Arc;

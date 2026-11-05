@@ -215,6 +215,7 @@ the background. `FieldClassification::retention_days` is metadata only; retentio
 | `spectra-macros` | `spectra_schema!`, `spectra_metric!` (helpers + topics + inventory) |
 | `spectra-backend-*` | Feature-gated storage adapters |
 | `spectra-runtime` | `SpectraBuilder`, composite sink, install |
+| `spectra-photon` | Photon publish sink and batched consumer-group storage writer |
 | `uf-spectra` (`spectra`) | Primary public crate |
 | `spectra-testkit` / `spectra-e2e` / `spectra-bench` | Matrix verification and benchmarks |
 

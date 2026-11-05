@@ -9,6 +9,7 @@ members = [
     "spectra-backend-tensorbase",
     "spectra-backend-clickhouse",
     "spectra-runtime",
+    "spectra-photon",
     "spectra",
     "spectra-codegen",
     "spectra-testkit",
