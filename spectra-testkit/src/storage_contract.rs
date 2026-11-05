@@ -24,6 +24,7 @@ pub async fn run_storage_contract(
     event_sort_and_pagination(events.as_ref()).await?;
     event_partition_filter(events.as_ref()).await?;
     event_aggregate_views(events.as_ref()).await?;
+    event_aggregate_beyond_query_cap(events.as_ref()).await?;
     event_stats_roundtrip(events.as_ref()).await?;
     metric_stats_roundtrip(metrics.as_ref()).await?;
     label_filter_hit(metrics.as_ref()).await?;
@@ -424,6 +425,51 @@ async fn event_aggregate_views(events: &dyn EventStorageBackend) -> Result<()> {
         }
         other => panic!("expected pivot, got {other:?}"),
     }
+    Ok(())
+}
+
+/// Aggregates count every matching row, even past the 1,000-row event query cap.
+async fn event_aggregate_beyond_query_cap(events: &dyn EventStorageBackend) -> Result<()> {
+    const ROWS: u32 = 1100;
+    let ts = Utc::now();
+    let table = "contract_aggregate_large";
+    for i in 0..ROWS {
+        let severity = if i % 2 == 0 { "info" } else { "warn" };
+        events
+            .append_row(table, &json!({"severity": severity}), ts, None)
+            .await?;
+    }
+    let base = EventsAggregateFilter {
+        table: table.into(),
+        start: ts - Duration::seconds(1),
+        end: ts + Duration::seconds(1),
+        partition: None,
+        filter: GridFilterModel::default(),
+        measure: EventMeasure::Count,
+        measure_field: None,
+        time_bucket_secs: Some(60),
+        group_by_field: None,
+        row_fields: Vec::new(),
+        pivot_field: None,
+        view: EventExploreView::TimeSeries,
+    };
+    let count = events.query_aggregate(base.clone()).await?;
+    assert_eq!(series_total(&count), f64::from(ROWS), "count past row cap");
+
+    let pie = events
+        .query_aggregate(EventsAggregateFilter {
+            group_by_field: Some("severity".into()),
+            view: EventExploreView::PieChart,
+            ..base
+        })
+        .await?;
+    let mut got = slices(&pie);
+    got.sort_by(|a, b| a.0.cmp(&b.0));
+    assert_eq!(
+        got,
+        vec![("info".into(), 550.0), ("warn".into(), 550.0)],
+        "pie slices past row cap"
+    );
     Ok(())
 }
 
